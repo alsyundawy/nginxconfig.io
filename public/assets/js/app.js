@@ -10,6 +10,8 @@
 		return repeatedString;
 	};
 
+
+
 	angular
 	.module('NginxConfigIoApp', ['ngclipboard', '720kb.tooltips'])
 	.config(function NginxCongigIoConfig($locationProvider) {
@@ -21,21 +23,33 @@
 		///////////////////////
 		// PRIVATE VARIABLES //
 		///////////////////////
+		var masonry;
 		var data = {
-			domain:				'example.com',
-			path:				'/var/www/example.com',
+			domain:				'',
+			path:				'',
 			document_root:		'/public',
+
 			https:				false,
 			http2:				true,
-			email:				'hello@example.com',
-			cdn:				false,
+
+			cert_type:			'letsencrypt',
+			email:				'',
+			ssl_certificate:	'',
+			ssl_certificate_key:'',
+
 			non_www:			true,
+			cdn:				false,
+
+			index_html:			false,
+
 			php:				'7.2',
 			index_php:			true,
-			index_html:			false,
 			wordpress:			false,
 
 			file_structure:		'unified',
+
+			referrer_policy:			'no-referrer-when-downgrade',
+			content_security_policy:	'default-src * \'unsafe-eval\' \'unsafe-inline\'',
 
 			worker_processes:	'auto',
 			user:				'www-data',
@@ -64,6 +78,9 @@
 		$scope.dataInit = false;
 		$scope.isDirty = false;
 
+		$scope.sslCertificateChanged = false;
+		$scope.sslCertificateKeyChanged = false;
+
 		$scope.extensions = {
 			assets:	'css(\\.map)?|js(\\.map)?',
 			fonts:	'ttf|ttc|otf|eot|woff|woff2',
@@ -79,9 +96,38 @@
 		$scope.clipboardCopy = undefined;
 
 
+
 		/////////////////////
 		// SCOPE FUNCTIONS //
 		/////////////////////
+		$scope.domain = function() {
+			return $scope.data.domain ? $scope.data.domain : 'example.com';
+		};
+
+		$scope.sslCertificate = function() {
+			if ($scope.isLetsEncrypt()) {
+				return '/etc/letsencrypt/live/' + $scope.domain() + '/fullchain.pem'
+			}
+
+			if ($scope.data.ssl_certificate) {
+				return $scope.data.ssl_certificate;
+			}
+
+			return '/etc/nginx/ssl/' + $scope.domain() + '.crt';
+		};
+
+		$scope.sslCertificateKey = function() {
+			if ($scope.isLetsEncrypt()) {
+				return '/etc/letsencrypt/live/' + $scope.domain() + '/privkey.pem'
+			}
+
+			if ($scope.data.ssl_certificate_key) {
+				return $scope.data.ssl_certificate_key;
+			}
+
+			return '/etc/nginx/ssl/' + $scope.domain() + '.key';
+		};
+
 		$scope.refreshHighlighting = function() {
 			var sourceCodes = document.querySelectorAll('main .file .code.source');
 
@@ -93,6 +139,10 @@
 					if (_sourceCode.nextSibling.children.length && _sourceCode.nextSibling.children[0].children.length) {
 						hljs.highlightBlock(_sourceCode.nextSibling.children[0].children[0]);
 					}
+					_sourceCode.classList.add('hidden');
+
+					masonry.reloadItems();
+					masonry.layout();
 				}, 0, true, sourceCode);
 			}
 		};
@@ -101,6 +151,10 @@
 			var hashData = $location.search();
 
 			for (var key in hashData) {
+				if (hashData[key] === 'false') {
+					hashData[key] = false;
+				}
+
 				if ($scope.data[key] !== undefined && typeof $scope.data[key] === typeof hashData[key]) {
 					$scope.isDirty = true;
 					$scope.data[key] = hashData[key];
@@ -152,6 +206,99 @@
 			});
 		};
 
+		$scope.initMasonry = function() {
+			masonry = new Masonry('main .files .grid', {
+				itemSelector: '.grid-item',
+				columnWidth: '.grid-sizer',
+				percentPosition: true,
+				stagger: 0,
+				transitionDuration: '0.6s'
+			});
+		};
+
+
+
+		///////////////////////////
+		// SCOPE QUERY FUNCTIONS //
+		///////////////////////////
+		$scope.isUnified = function() {
+			return $scope.data.file_structure === 'unified';
+		};
+
+		$scope.isModularized = function() {
+			return !$scope.isUnified();
+		};
+
+		$scope.isHTTPS = function() {
+			return $scope.data.https;
+		};
+
+		$scope.isHTTP2 = function() {
+			return $scope.isHTTPS() && $scope.data.http2;
+		};
+
+		$scope.isLetsEncrypt = function() {
+			return $scope.isHTTPS() && $scope.data.cert_type === 'letsencrypt';
+		};
+
+		$scope.isCustomCert = function() {
+			return $scope.isHTTPS() && $scope.data.cert_type === 'custom';
+		};
+
+		$scope.isNonWWW = function() {
+			return $scope.data.non_www;
+		};
+
+		$scope.isWWW = function() {
+			return !$scope.isNonWWW();
+		};
+
+		$scope.isCDN = function() {
+			return $scope.isWWW() && $scope.data.cdn;
+		};
+
+		$scope.isIndexHtml = function() {
+			return $scope.data.index_html;
+		};
+
+		$scope.isPHP = function() {
+			return $scope.data.php !== 'off';
+		};
+
+		$scope.isIndexPhp = function() {
+			return $scope.isPHP() && $scope.data.index_php;
+		};
+
+		$scope.isWordPress = function() {
+			return $scope.isPHP() && $scope.data.wordpress;
+		};
+
+		$scope.isCSP = function() {
+			return !!$scope.data.content_security_policy;
+		};
+
+		$scope.isAccessLog = function() {
+			return !!$scope.data.access_log;
+		};
+
+		$scope.isGzip = function() {
+			return $scope.data.gzip;
+		};
+
+		$scope.isServerTokens = function() {
+			return $scope.data.server_tokens;
+		};
+
+		$scope.isLogNotFound = function() {
+			return $scope.data.log_not_found;
+		};
+
+		$scope.isLimitReq = function() {
+			return $scope.data.limit_req;
+		};
+
+
+
 
 
 		//////////////////
@@ -181,6 +328,7 @@
 		// INIT //
 		//////////
 		$scope.setDataFromHash();
+		$scope.initMasonry();
 	})
 	.config(['tooltipsConfProvider', function (tooltipsConfProvider) {
 		tooltipsConfProvider.configure({

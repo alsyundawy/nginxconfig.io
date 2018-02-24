@@ -3,12 +3,12 @@
 Online nginx configuration generator.
 
 ## Features
-* HTTPS (with [Let's Encrypt](https://letsencrypt.org), [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/))
+* HTTPS (with [Let's Encrypt](https://letsencrypt.org) or custom certificate, [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/))
 * HTTP2
 * CDN
 * www / non-www
 * PHP (TCP, 5.x FPM, 7.0 FPM, 7.1 FPM, 7.2 FPM)
-* WordPress security essentials
+* WordPress security essentials (*including [CVE-2018-6389](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6389)*)
 * pass requests to index.php
 	* *[Laravel](https://laravel.com/docs/master/deployment#nginx)*
 	* *[Lumen](https://lumen.laravel.com/docs/5.1/installation#configuration)*
@@ -25,8 +25,13 @@ Online nginx configuration generator.
 	* *[Vue.js](https://stackoverflow.com/questions/47655869/how-to-use-vue-js-with-nginx)*
 	* *[Ember.js](https://discuss.emberjs.com/t/how-to-serve-all-routes-on-a-production-server-exactly/6372)*
 	* …
-* unified (`nginx.conf`) / separated file structure (ideal for multi-domain environment)
+* unified (`nginx.conf`) / modularized file structure (ideal for multi-domain environment)
 * security headers
+	* `X-Frame-Options`
+	* `X-XSS-Protection`
+	* `X-Content-Type-Options`
+	* `Referrer-Policy`
+	* `Content-Security-Policy`
 * `worker_processes`
 * `user`
 * `pid`
@@ -46,3 +51,4 @@ Online nginx configuration generator.
 * [clipboard.js](https://clipboardjs.com) - Copy generated config to clipboard
 * [ngclipboard](http://sachinchoolur.github.io/ngclipboard/) - AngularJS directive for clipboard.js
 * [Angular Tooltips](https://720kb.github.io/angular-tooltips/) - helper tooltips
+* [Masonry](https://masonry.desandro.com) - files grid layout
