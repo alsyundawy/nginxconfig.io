@@ -25,6 +25,9 @@
 		///////////////////////
 		var masonry;
 		var data = {
+			ipv4:				'*',
+			ipv6:				'::',
+
 			domain:				'',
 			path:				'',
 			document_root:		'/public',
@@ -40,6 +43,7 @@
 			non_www:			true,
 			cdn:				false,
 
+			index:				'',
 			index_html:			false,
 
 			php:				'7.2',
@@ -49,7 +53,7 @@
 			file_structure:		'unified',
 
 			referrer_policy:			'no-referrer-when-downgrade',
-			content_security_policy:	'default-src * \'unsafe-eval\' \'unsafe-inline\'',
+			content_security_policy:	'default-src * data: \'unsafe-eval\' \'unsafe-inline\'',
 
 			worker_processes:	'auto',
 			user:				'www-data',
@@ -192,6 +196,30 @@
 			gtag('event', 'reset');
 		};
 
+		$scope.downloadZip = function() {
+			var zip = new JSZip();
+
+			var sourceCodes = document.querySelectorAll('main .file .code.source');
+
+			for (var i = 0; i < sourceCodes.length; i++) {
+				var sourceCode = sourceCodes[i];
+
+				var name	= sourceCode.dataset.filename;
+				var content	= sourceCode.children[0].children[0].innerText;
+
+				zip.file(name, content);
+			}
+
+			zip.generateAsync({ type: 'blob' })
+				.then(function(content) {
+					saveAs(content, 'nginxconfig.io-' + $scope.domain() + '.zip');
+				});
+
+			gtag('event', $scope.domain(), {
+				event_category: 'download_zip'
+			});
+		};
+
 		$scope.clipboardSuccess = function(key) {
 			$scope.clipboardCopy = key;
 
@@ -211,6 +239,7 @@
 				itemSelector: '.grid-item',
 				columnWidth: '.grid-sizer',
 				percentPosition: true,
+				initLayout: false,
 				stagger: 0,
 				transitionDuration: '0.6s'
 			});
@@ -223,6 +252,10 @@
 		///////////////////////////
 		$scope.isUnified = function() {
 			return $scope.data.file_structure === 'unified';
+		};
+
+		$scope.isIPv6 = function() {
+			return !!$scope.data.ipv6;
 		};
 
 		$scope.isModularized = function() {
