@@ -35,7 +35,12 @@
 			https:				false,
 			http2:				true,
 
+			redirect:			true,
+			force_https:		true,
+
 			cert_type:			'letsencrypt',
+			ssl_profile:		'intermediate',
+			hsts:				true,
 			email:				'',
 			ssl_certificate:	'',
 			ssl_certificate_key:'',
@@ -43,11 +48,10 @@
 			non_www:			true,
 			cdn:				false,
 
-			index:				'',
-			index_html:			false,
+			index:				'index.php',
+			fallback:			true,
 
 			php:				'7.2',
-			index_php:			true,
 			wordpress:			false,
 
 			file_structure:		'unified',
@@ -97,6 +101,21 @@
 
 		$scope.gzipTypes = 'text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml';
 
+		$scope.sslProfiles = {
+			modern: {
+				protocols: 'TLSv1.2',
+				ciphers: 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256',
+			},
+			intermediate: {
+				protocols: 'TLSv1 TLSv1.1 TLSv1.2',
+				ciphers: 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS',
+			},
+			old: {
+				protocols: 'SSLv3 TLSv1 TLSv1.1 TLSv1.2',
+				ciphers: 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:HIGH:SEED:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!RSAPSK:!aDH:!aECDH:!EDH-DSS-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA:!SRP',
+			},
+		};
+
 		$scope.clipboardCopy = undefined;
 
 
@@ -109,8 +128,8 @@
 		};
 
 		$scope.sslCertificate = function() {
-			if ($scope.isLetsEncrypt()) {
-				return '/etc/letsencrypt/live/' + $scope.domain() + '/fullchain.pem'
+			if ($scope.isCertLetsEncrypt()) {
+				return '/etc/letsencrypt/live/' + $scope.domain() + '/fullchain.pem';
 			}
 
 			if ($scope.data.ssl_certificate) {
@@ -121,8 +140,8 @@
 		};
 
 		$scope.sslCertificateKey = function() {
-			if ($scope.isLetsEncrypt()) {
-				return '/etc/letsencrypt/live/' + $scope.domain() + '/privkey.pem'
+			if ($scope.isCertLetsEncrypt()) {
+				return '/etc/letsencrypt/live/' + $scope.domain() + '/privkey.pem';
 			}
 
 			if ($scope.data.ssl_certificate_key) {
@@ -145,8 +164,7 @@
 					}
 					_sourceCode.classList.add('hidden');
 
-					masonry.reloadItems();
-					masonry.layout();
+					$scope.doMasonry();
 				}, 0, true, sourceCode);
 			}
 		};
@@ -234,6 +252,15 @@
 			});
 		};
 
+		$scope.doMasonry = function() {
+			masonry.reloadItems();
+			masonry.layout();
+
+			$timeout(function() {
+				masonry.layout();
+			}, 600);
+		};
+
 		$scope.initMasonry = function() {
 			masonry = new Masonry('main .files .grid', {
 				itemSelector: '.grid-item',
@@ -270,12 +297,32 @@
 			return $scope.isHTTPS() && $scope.data.http2;
 		};
 
-		$scope.isLetsEncrypt = function() {
+		$scope.isForceHTTPS = function() {
+			return $scope.isHTTPS() && $scope.data.force_https;
+		};
+
+		$scope.isCertLetsEncrypt = function() {
 			return $scope.isHTTPS() && $scope.data.cert_type === 'letsencrypt';
 		};
 
-		$scope.isCustomCert = function() {
+		$scope.isCertCustom = function() {
 			return $scope.isHTTPS() && $scope.data.cert_type === 'custom';
+		};
+
+		$scope.isSSLProfileModern = function() {
+			return $scope.isHTTPS() && $scope.data.ssl_profile === 'modern';
+		};
+
+		$scope.isSSLProfileIntermediate = function() {
+			return $scope.isHTTPS() && $scope.data.ssl_profile === 'intermediate';
+		};
+
+		$scope.isSSLProfileOld = function() {
+			return $scope.isHTTPS() && $scope.data.ssl_profile === 'old';
+		};
+
+		$scope.isHSTS = function() {
+			return $scope.isHTTPS() && $scope.data.hsts;
 		};
 
 		$scope.isNonWWW = function() {
@@ -286,20 +333,28 @@
 			return !$scope.isNonWWW();
 		};
 
+		$scope.isRedirect = function() {
+			return $scope.data.redirect;
+		};
+
 		$scope.isCDN = function() {
 			return $scope.isWWW() && $scope.data.cdn;
 		};
 
 		$scope.isIndexHtml = function() {
-			return $scope.data.index_html;
+			return $scope.data.index === 'index.html';
+		};
+
+		$scope.isIndexPhp = function() {
+			return $scope.isPHP() && $scope.data.index === 'index.php';
+		};
+
+		$scope.isFallback = function() {
+			return $scope.data.fallback && (!$scope.isIndexPhp() || $scope.isPHP);
 		};
 
 		$scope.isPHP = function() {
 			return $scope.data.php !== 'off';
-		};
-
-		$scope.isIndexPhp = function() {
-			return $scope.isPHP() && $scope.data.index_php;
 		};
 
 		$scope.isWordPress = function() {

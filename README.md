@@ -3,12 +3,16 @@
 Online nginx configuration generator.
 
 ## Features
-* HTTPS (with [Let's Encrypt](https://letsencrypt.org) or custom certificate, [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/))
+* HTTPS (with [Let's Encrypt](https://letsencrypt.org) or custom certificate)
 * HTTP2
+* [SSL profiles](https://mozilla.github.io/server-side-tls/ssl-config-generator/)
+* [HSTS](https://hstspreload.org)
+* force HTTPS
 * CDN
 * www / non-www
+* redirect subdomains
 * IPv4, IPv6
-* PHP (TCP, 5.x FPM, 7.0 FPM, 7.1 FPM, 7.2 FPM)
+* PHP (TCP, 5.x FPM, 7.0 FPM, 7.1 FPM, 7.2 FPM, 7.3 FPM)
 * WordPress security essentials (*including [CVE-2018-6389](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2018-6389)*)
 * pass requests to index.php
 	* *[Laravel](https://laravel.com/docs/master/deployment#nginx)*
@@ -55,3 +59,12 @@ Online nginx configuration generator.
 * [Masonry](https://masonry.desandro.com) - files grid layout
 * [JSZip](https://stuk.github.io/jszip) - generating zip package
 * [FileSaver](https://github.com/eligrey/FileSaver.js) - downloading zip file
+
+## Resources
+* [Mozilla SSL Configuration Generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/)
+* [Nginx Optimization: understanding sendfile, tcp_nodelay and tcp_nopush](https://thoughts.t37.net/nginx-optimization-understanding-sendfile-tcp-nodelay-and-tcp-nopush-c55cdd276765)
+* [NGINX Tuning For Best Performance](https://gist.github.com/denji/8359866)
+* [Hardening Your HTTP Security Headers](https://www.keycdn.com/blog/http-security-headers/)
+* [h5bp/server-configs-nginx](https://github.com/h5bp/server-configs-nginx)
+* [Diffie-Hellman DSA-like parameters](https://security.stackexchange.com/questions/95178/diffie-hellman-parameters-still-calculating-after-24-hours/95184#95184)
+* [hstspreload.org](https://hstspreload.org)

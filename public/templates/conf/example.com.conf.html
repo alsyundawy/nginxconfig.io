@@ -1,8 +1,16 @@
-server {
-	listen {{ data.ipv4 !== '*' ? data.ipv4 + ':' : '' }}{{ isHTTPS() ? '443 ssl' : '80' }}{{ isHTTP2() ? ' http2' : '' }};<!--
+server {<!--
+
+	✘ HTTPS || ✘ forceHTTPS --><span ng-if="!isHTTPS() || !isForceHTTPS()">
+	listen {{ data.ipv4 !== '*' ? data.ipv4 + ':' : '' }}80;<!--
 
 	✔ IPv6 --><span ng-if="isIPv6()">
-	listen [{{ data.ipv6 }}]:{{ isHTTPS() ? '443 ssl' : '80' }}{{ isHTTP2() ? ' http2' : '' }};</span>
+	listen [{{ data.ipv6 }}]:80;</span></span><!--
+
+	✔ HTTPS --><span ng-if="isHTTPS()">
+	listen {{ data.ipv4 !== '*' ? data.ipv4 + ':' : '' }}443 ssl{{ isHTTP2() ? ' http2' : '' }};<!--
+
+	✔ IPv6 --><span ng-if="isIPv6()">
+	listen [{{ data.ipv6 }}]:443 ssl{{ isHTTP2() ? ' http2' : '' }};</span></span>
 
 	server_name {{ isWWW() ? 'www.' : '' }}{{ domain() }};<!--
 
@@ -11,30 +19,27 @@ server {
 	root $base{{ data.document_root }};</span><!--
 
 	✘ PHP --><span ng-if="!isPHP()">
-	root /var/www/{{ domain() }}{{ data.document_root }};</span>
+	root /var/www/{{ domain() }}{{ data.document_root }};</span><!--
 
-	index {{ data.index ? data.index : 'index.html' + (isPHP() ? ' index.php' : '') }};<!--
+	✔ unified && ✔ index.php --><span ng-if="isUnified() && isIndexPhp()">
+
+	# index.php
+	index index.php;</span><!--
 
 	✔ HTTPS --><span ng-if="isHTTPS()">
 
 	# SSL
-	include _ssl.conf;
 	ssl_certificate {{ sslCertificate() }};
 	ssl_certificate_key {{ sslCertificateKey() }};<!--
 
-	✔ Let's Encrypt --><span ng-if="isLetsEncrypt()">
+	✔ Let's Encrypt --><span ng-if="isCertLetsEncrypt()">
 	ssl_trusted_certificate /etc/letsencrypt/live/{{ domain() }}/fullchain.pem;</span></span><!--
 
-	✔ unified && ✔ PHP --><span ng-if="isUnified() && isPHP()">
+	✔ fallback --><span ng-if="isFallback()">
 
-	# index
-	index {{ isIndexHtml() ? 'index.html ' : '' }}index.php;</span><!--
-
-	(✔ PHP && ✔ index.php) || ✔ index.html --><span ng-if="isIndexPhp() || isIndexHtml()">
-
-	# $uri{{ isIndexHtml() ? ', index.html' : '' }}{{ isIndexPhp() ? ', index.php' : '' }}
+	# $uri{{ isFallback() ? (', ' + data.index) : '' }}
 	location / {
-		try_files $uri $uri/ {{ isIndexHtml() ? '/index.html' : '' }}{{ isIndexHtml() && isIndexPhp() ? ' ' : '' }}{{ isIndexPhp() ? '/index.php?$query_string' : '' }};
+		try_files $uri $uri/ {{ isIndexHtml() ? '/index.html' : '' }}{{ isIndexPhp() ? '/index.php?$query_string' : '' }};
 	}</span><!--
 
 	✔ unified --><span ng-if="isModularized()">
@@ -85,11 +90,10 @@ server {
 	✔ HTTPS --><span ng-if="isHTTPS()">
 
 	# SSL
-	include _ssl.conf;
 	ssl_certificate {{ sslCertificate() }};
 	ssl_certificate_key {{ sslCertificateKey() }};<!--
 
-	✔ Let's Encrypt --><span ng-if="isLetsEncrypt()">
+	✔ Let's Encrypt --><span ng-if="isCertLetsEncrypt()">
 	ssl_trusted_certificate /etc/letsencrypt/live/{{ domain() }}/fullchain.pem;</span></span>
 
 	# disable access_log
@@ -115,12 +119,12 @@ server {
 	location / {
 		deny all;
 	}
-}</span>
-<!--
+}</span><!--
 
 
 
--->
+✔ redirect --><span ng-if="isRedirect()">
+
 # {{ isWWW() ? 'non-www, ' : '' }}subdomains redirect
 server {
 	listen {{ data.ipv4 !== '*' ? data.ipv4 + ':' : '' }}{{ isHTTPS() ? '443 ssl' : '80' }}{{ isHTTP2() ? ' http2' : '' }};<!--
@@ -133,11 +137,10 @@ server {
 	✔ HTTPS --><span ng-if="isHTTPS()">
 
 	# SSL
-	include _ssl.conf;
-	ssl_certificate /etc/letsencrypt/live/{{ domain() }}/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/{{ domain() }}/privkey.pem;<!--
+	ssl_certificate {{ sslCertificate() }};
+	ssl_certificate_key {{ sslCertificateKey() }};<!--
 
-	✔ Let's Encrypt --><span ng-if="isLetsEncrypt()">
+	✔ Let's Encrypt --><span ng-if="isCertLetsEncrypt()">
 	ssl_trusted_certificate /etc/letsencrypt/live/{{ domain() }}/fullchain.pem;</span></span>
 
 	return 301 https://{{ isWWW() ? 'www.' : '' }}{{ domain() }}$request_uri;
@@ -145,7 +148,7 @@ server {
 
 
 
-✔ HTTPS --><span ng-if="isHTTPS()">
+✔ forceHTTPS --><span ng-if="isForceHTTPS()">
 
 # HTTP redirect
 server {
@@ -156,21 +159,21 @@ server {
 
 	server_name .{{ domain() }};<!--
 
-	✔ modularized && ✔ Let's Encrypt --><span ng-if="isModularized() && isLetsEncrypt()">
+	✔ modularized && ✔ Let's Encrypt --><span ng-if="isModularized() && isCertLetsEncrypt()">
 
 	include _letsencrypt.conf;</span><!--
 
-	✔ unified && ✔ Let's Encrypt --><span ng-if="isUnified() && isLetsEncrypt()">
+	✔ unified && ✔ Let's Encrypt --><span ng-if="isUnified() && isCertLetsEncrypt()">
 
 <ng-include ng-include-tabs="2" src="'templates/conf/_letsencrypt.conf.html?v=COMMIT_HASH'" onload="refreshHighlighting()"></ng-include></span><!--
 
-	✔ Let's Encrypt --><span ng-if="isLetsEncrypt()">
+	✔ Let's Encrypt --><span ng-if="isCertLetsEncrypt()">
 
 	location / {
 		return 301 https://{{ isWWW() ? 'www.' : '' }}{{ domain() }}$request_uri;
 	}</span><!--
 
-	✘ Let's Encrypt --><span ng-if="!isLetsEncrypt()">
+	✘ Let's Encrypt --><span ng-if="!isCertLetsEncrypt()">
 
 	return 301 https://{{ isWWW() ? 'www.' : '' }}{{ domain() }}$request_uri;</span>
 }</span>
