@@ -49,7 +49,9 @@
 			cdn:				false,
 
 			index:				'index.php',
-			fallback:			true,
+			fallback_html:		false,
+			fallback_php:		true,
+			fallback_php_path:	'/api/',
 
 			php:				'7.2',
 			wordpress:			false,
@@ -272,6 +274,32 @@
 			});
 		};
 
+		$scope.setPreset = function(preset) {
+			$scope.data.php				= data.php;
+			$scope.data.wordpress		= data.wordpress;
+			$scope.data.index			= data.index;
+			$scope.data.fallback_html	= data.fallback_html;
+
+			switch(preset) {
+				case 'frontend':
+					$scope.data.php = 'off';
+					$scope.data.index = 'index.html';
+					$scope.data.fallback_html = true;
+					break;
+				case 'spa':
+					$scope.data.index = 'index.html';
+					$scope.data.fallback_html = true;
+					break;
+				case 'wordpress':
+					$scope.data.wordpress = true;
+					break;
+			}
+
+			gtag('event', preset, {
+				event_category: 'preset',
+			});
+		};
+
 
 
 		///////////////////////////
@@ -341,16 +369,20 @@
 			return $scope.isWWW() && $scope.data.cdn;
 		};
 
-		$scope.isIndexHtml = function() {
-			return $scope.data.index === 'index.html';
+		$scope.isIndexHTML = function() {
+			return $scope.data.index === 'index.html' || !$scope.isPHP();
 		};
 
-		$scope.isIndexPhp = function() {
+		$scope.isIndexPHP = function() {
 			return $scope.isPHP() && $scope.data.index === 'index.php';
 		};
 
-		$scope.isFallback = function() {
-			return $scope.data.fallback && (!$scope.isIndexPhp() || $scope.isPHP);
+		$scope.isFallbackHTML = function() {
+			return $scope.data.fallback_html;
+		};
+
+		$scope.isFallbackPHP = function() {
+			return $scope.data.fallback_php && $scope.isPHP();
 		};
 
 		$scope.isPHP = function() {

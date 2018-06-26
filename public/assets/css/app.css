@@ -76,13 +76,16 @@ main {
 	flex: 1 1 auto;
 }
 
-main .options,
-main .sidebar {
+main .options {
 	padding-top: 1.5rem;
 }
 
+main .options .card {
+	background-color: #f8f8f8;
+}
+
 main .options .card .card-body {
-	padding: 0.5rem;
+	padding: 0.25rem 0.5rem 0.5rem;
 	font-size: 0.9rem;
 }
 
@@ -109,6 +112,10 @@ main .options .card .form-subgroup .form-subgroup {
 	margin-left: 0;
 	border-left: 1px solid #d7e0ea;
 	padding-left: 0.4rem;
+}
+
+main .options .card .form-subgroup .form-check + .form-subgroup {
+	margin-left: 5.5px;
 }
 
 main .options .card .form-control[type="text"]:placeholder-shown,
@@ -192,6 +199,12 @@ main .commands pre code {
 	overflow-x: visible;
 }
 
+@media (min-width: 992px) {
+	main .sidebar {
+		margin-top: -2.4rem;
+	}
+}
+
 main .sidebar .github-link {
 	text-align: center;
 	font-size: 1rem;
@@ -238,6 +251,19 @@ main .buttons .btn-reset img {
 	height: 0.9rem;
 }
 
+main .presets {
+	text-align: center;
+	margin-bottom: 0.5rem;
+}
+
+main .presets .btn img {
+	height: 1.1rem;
+	vertical-align: text-bottom;
+}
+
+main .presets .btn.btn-outline-dark:hover {
+	background-color: #666;
+}
 
 
 /*
