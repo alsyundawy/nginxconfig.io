@@ -19,12 +19,18 @@
 			.html5Mode(true)
 			.hashPrefix('!');
 	})
-	.controller('NginxConfigIoController', function NginxConfigIoController($scope, $location, $timeout) {
+	.controller('NginxConfigIoController', function NginxConfigIoController($scope, $window, $location, $timeout) {
 		///////////////////////
 		// PRIVATE VARIABLES //
 		///////////////////////
 		var masonry;
-		var data = {
+
+
+
+		/////////////////////
+		// SCOPE VARIABLES //
+		/////////////////////
+		$scope.defaultData = {
 			ipv4:				'*',
 			ipv6:				'::',
 
@@ -32,7 +38,7 @@
 			path:				'',
 			document_root:		'/public',
 
-			https:				false,
+			https:				true,
 			http2:				true,
 
 			redirect:			true,
@@ -53,10 +59,12 @@
 			fallback_php:		true,
 			fallback_php_path:	'/api/',
 
-			php:				'7.2',
+			php:				true,
+			php_connection:		'7.2',
 			wordpress:			false,
+			drupal:				false,
 
-			file_structure:		'unified',
+			file_structure:		'modularized',
 
 			referrer_policy:			'no-referrer-when-downgrade',
 			content_security_policy:	'default-src * data: \'unsafe-eval\' \'unsafe-inline\'',
@@ -76,17 +84,17 @@
 			expires_media:		'7d',
 			expires_svg:		'7d',
 			expires_fonts:		'7d',
+
+			proxy:				false,
+			proxy_path:			'/',
+			proxy_pass:			'http://127.0.0.1:3000',
 		};
 
-
-
-		/////////////////////
-		// SCOPE VARIABLES //
-		/////////////////////
 		$scope.location = $location;
-		$scope.data = angular.copy(data);
+		$scope.data = angular.copy($scope.defaultData);
 		$scope.dataInit = false;
 		$scope.isDirty = false;
+		$scope.tab = 'site';
 
 		$scope.sslCertificateChanged = false;
 		$scope.sslCertificateKeyChanged = false;
@@ -164,7 +172,7 @@
 					if (_sourceCode.nextSibling.children.length && _sourceCode.nextSibling.children[0].children.length) {
 						hljs.highlightBlock(_sourceCode.nextSibling.children[0].children[0]);
 					}
-					_sourceCode.classList.add('hidden');
+					_sourceCode.setAttribute('hidden', '');
 
 					$scope.doMasonry();
 				}, 0, true, sourceCode);
@@ -197,7 +205,7 @@
 
 			var changedData = {};
 			for (var key in $scope.data) {
-				if (!angular.equals($scope.data[key], data[key])) {
+				if (!angular.equals($scope.data[key], $scope.defaultData[key])) {
 					changedData[key] = $scope.data[key];
 				}
 			}
@@ -212,7 +220,8 @@
 		};
 
 		$scope.reset = function() {
-			$scope.data = angular.copy(data);
+			$scope.defaultData.index = 'index.php';
+			$scope.data = angular.copy($scope.defaultData);
 			gtag('event', 'reset');
 		};
 
@@ -264,7 +273,7 @@
 		};
 
 		$scope.initMasonry = function() {
-			masonry = new Masonry('main .files .grid', {
+			masonry = new Masonry('main .grid', {
 				itemSelector: '.grid-item',
 				columnWidth: '.grid-sizer',
 				percentPosition: true,
@@ -274,15 +283,21 @@
 			});
 		};
 
+		$scope.setTab = function(tab) {
+			$scope.tab = tab;
+		};
+
 		$scope.setPreset = function(preset) {
-			$scope.data.php				= data.php;
-			$scope.data.wordpress		= data.wordpress;
-			$scope.data.index			= data.index;
-			$scope.data.fallback_html	= data.fallback_html;
+			$scope.data.php				= $scope.defaultData.php;
+			$scope.data.wordpress		= $scope.defaultData.wordpress;
+			$scope.data.drupal			= $scope.defaultData.drupal;
+			$scope.data.proxy			= $scope.defaultData.proxy;
+			$scope.data.index			= $scope.defaultData.index;
+			$scope.data.fallback_html	= $scope.defaultData.fallback_html;
 
 			switch(preset) {
 				case 'frontend':
-					$scope.data.php = 'off';
+					$scope.data.php = false;
 					$scope.data.index = 'index.html';
 					$scope.data.fallback_html = true;
 					break;
@@ -293,11 +308,22 @@
 				case 'wordpress':
 					$scope.data.wordpress = true;
 					break;
+				case 'drupal':
+					$scope.data.drupal = true;
+					break;
+				case 'nodejs':
+					$scope.data.php = false;
+					$scope.data.proxy = true;
+					break;
 			}
 
 			gtag('event', preset, {
 				event_category: 'preset',
 			});
+		};
+
+		$scope.getChangesForTab = function(tab) {
+			return $window.document.querySelectorAll('section.tabs .tab-content .tab-' + tab + ' .input-changed').length;
 		};
 
 
@@ -386,11 +412,15 @@
 		};
 
 		$scope.isPHP = function() {
-			return $scope.data.php !== 'off';
+			return $scope.data.php;
 		};
 
 		$scope.isWordPress = function() {
 			return $scope.isPHP() && $scope.data.wordpress;
+		};
+
+		$scope.isDrupal= function() {
+			return $scope.isPHP() && $scope.data.drupal;
 		};
 
 		$scope.isCSP = function() {
@@ -417,6 +447,10 @@
 			return $scope.data.limit_req;
 		};
 
+		$scope.isProxy = function() {
+			return $scope.data.proxy;
+		};
+
 
 
 
@@ -427,6 +461,13 @@
 		$scope.$watch('data', function(newValue, oldValue) {
 			$scope.refreshHighlighting();
 			$scope.updateHash();
+
+			if (!$scope.data.php) {
+				$scope.defaultData.index = 'index.html';
+				$scope.data.index = 'index.html';
+			} else {
+				$scope.defaultData.index = 'index.php';
+			}
 
 			for (var key in $scope.data) {
 				if (!angular.equals(newValue[key], oldValue[key])) {

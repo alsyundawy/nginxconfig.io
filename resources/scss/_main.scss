@@ -1,0 +1,162 @@
+section.presets {
+	margin-top: 0.5rem;
+	margin-bottom: 1rem;
+
+	.btn {
+		margin-bottom: 0.25rem;
+
+		&.btn-outline-dark{
+			&:hover {
+				background-color: #666;
+			}
+		}
+
+		img {
+			height: 1.1rem;
+			vertical-align: text-bottom;
+		}
+	}
+}
+
+section.tabs {
+	margin-bottom: 1rem;
+
+	.nav-tabs {
+		.nav-item {
+			a {
+				cursor: pointer;
+				position: relative;
+				transition: all 0.25s;
+				padding-left: 0.9rem;
+				padding-right: 0.9rem;
+
+				@include media-breakpoint-up(md) {
+					font-size: 0.8rem;
+				}
+
+				@include media-breakpoint-up(lg) {
+					padding-left: 0.5rem;
+					padding-right: 0.5rem;
+					font-size: 0.9rem;
+				}
+
+				@include media-breakpoint-up(xl) {
+					padding-left: 1rem;
+					padding-right: 1rem;
+					font-size: 1rem;
+				}
+
+				&.changed {
+					font-weight: 700;
+					padding-left: 0.5rem;
+					padding-right: 1.3rem;
+
+					@include media-breakpoint-up(lg) {
+						padding-left: 0.3rem;
+						padding-right: 1.1rem;
+					}
+
+					@include media-breakpoint-up(xl) {
+						padding-left: 0.6rem;
+						padding-right: 1.4rem;
+					}
+
+					small {
+						display: inline;
+					}
+				}
+
+				small {
+					position: absolute;
+					top: 50%;
+					right: 0.25rem;
+					transform: translateY(-50%);
+					display: none;
+					color: #999;
+				}
+			}
+		}
+	}
+	.tab-content {
+		padding: 0.5rem 0.75rem;
+		border-left: 1px solid #dee2e6;
+		border-right: 1px solid #dee2e6;
+		border-bottom: 1px solid #dee2e6;
+		border-bottom-right-radius: 0.25rem;
+		border-bottom-left-radius: 0.25rem;
+
+		.form-group {
+			margin-bottom: 0.25rem;
+
+			.form-check {
+				padding-top: 0.2rem;
+
+				.form-check-label {
+					cursor: pointer;
+					user-select: none;
+				}
+			}
+
+			.form-control.input-changed,
+			.form-check.input-changed,
+			select.input-changed {
+				background-color: #fdffd9;
+			}
+
+			.form-check.input-changed {
+				border-radius: 0.2rem;
+			}
+
+			.btn {
+				&.btn-download {
+					img {
+						vertical-align: -2px;
+						margin-right: 0.1rem;
+						width: 1rem;
+					}
+				}
+			}
+		}
+	}
+}
+
+main {
+	flex: 1 1 auto;
+
+	.commands {
+		margin-bottom: 1rem;
+	}
+
+	.file {
+		margin-bottom: 2rem;
+
+		.btn-clipboard {
+			font-size: 0;
+			padding: 0.2rem 0.4rem 0.05rem;
+			vertical-align: text-bottom;
+			float: right;
+		}
+	}
+
+	.commands,
+	.file .code {
+		overflow-x: auto;
+		font-size: 0.75rem;
+		line-height: 1.25;
+		background-color: #f8f8f8;
+
+		pre {
+			margin-bottom: 0;
+			font-size: inherit;
+
+			code {
+				display: block;
+				padding: 0.6rem;
+				-moz-tab-size: 4;
+				tab-size: 4;
+				overflow: visible;
+				overflow-x: visible;
+			}
+		}
+	}
+}

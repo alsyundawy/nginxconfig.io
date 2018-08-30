@@ -1,0 +1,59 @@
+aside.sidebar {
+	margin-top: 1rem;
+
+	@include media-breakpoint-up(lg) {
+		margin-top: -0.5rem;
+	}
+
+	@include media-breakpoint-up(xl) {
+		margin-top: -2.5rem;
+	}
+
+	.github-link {
+		text-align: center;
+		font-size: 1rem;
+		margin-bottom: 0.5rem;
+
+		small {
+			font-size: 90%;
+		}
+
+		img {
+			height: 1.2rem;
+			vertical-align: -4px;
+		}
+	}
+
+	.github-star {
+		width: 132px;
+		height: 30px;
+		display: block;
+		border: 0;
+		overflow: hidden;
+		margin: 0 auto 0.25rem;
+	}
+
+	.buttons {
+		text-align: center;
+		margin-top: 1.5rem;
+
+		.btn {
+			&.btn-download {
+				margin-bottom: 0.25rem;
+
+				img {
+					vertical-align: -2px;
+					margin-right: 0.1rem;
+					height: 1rem;
+				}
+			}
+
+			&.btn-reset {
+				img {
+					vertical-align: -3px;
+					height: 0.9rem;
+				}
+			}
+		}
+	}
+}

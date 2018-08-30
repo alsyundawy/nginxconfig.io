@@ -1,7 +1,7 @@
 language: node_js
 
 node_js:
-  - "lts/*"
+  - "node"
 
 addons:
   ssh_known_hosts: nginxconfig.io
@@ -9,10 +9,10 @@ addons:
 cache:
   directories:
     - ~/.npm
-    - node_modules
+    - ~/.cache
 
 install:
-  - npm install
+  - npm ci
 
 script:
   - npm run test
@@ -24,7 +24,8 @@ before_deploy:
   - ssh-add /tmp/deploy_rsa
 
 deploy:
+  provider: script
+  script: bash .travis_deploy.sh
+  skip_cleanup: true
   on:
     branch: master
-  provider: script
-  script: ssh -q -l root nginxconfig.io "sudo -u www-data -H sh -c 'cd /var/www/nginxconfig.io; git reset --hard && git pull origin master && find . -type f -name '*.html' -exec sed -i -e \"s/COMMIT_HASH/$TRAVIS_COMMIT/\" {} \;'"
