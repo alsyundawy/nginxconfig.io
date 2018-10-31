@@ -51,6 +51,10 @@
 			ssl_certificate:	'',
 			ssl_certificate_key:'',
 
+			resolver_cloudflare:true,
+			resolver_google:	true,
+			resolver_opendns:	true,
+
 			non_www:			true,
 			cdn:				false,
 
@@ -60,7 +64,7 @@
 			fallback_php_path:	'/api/',
 
 			php:				true,
-			php_connection:		'7.2',
+			php_connection:		'/var/run/php/php7.2-fpm.sock',
 			wordpress:			false,
 			drupal:				false,
 
@@ -72,8 +76,12 @@
 			worker_processes:	'auto',
 			user:				'www-data',
 			pid:				'/run/nginx.pid',
+
 			access_log:			'/var/log/nginx/access.log',
-			error_log:			'/var/log/nginx/error.log',
+			error_log:			'/var/log/nginx/error.log warn',
+			access_log_domain:	false,
+			error_log_domain:	false,
+
 			client_max_body_size: 16,
 			gzip:				true,
 			server_tokens:		false,
@@ -101,12 +109,15 @@
 
 		$scope.extensions = {
 			assets:	'css(\\.map)?|js(\\.map)?',
-			fonts:	'ttf|ttc|otf|eot|woff|woff2',
+			fonts:	'ttf|ttc|otf|eot|woff2?',
 			svg:	'svgz?',
 			images:	'jpe?g|png|gif|ico|cur|heic|webp|tiff?',
 			audio:	'mp3|m4a|aac|ogg|midi?|wav',
 			video:	'mp4|mov|webm|mpe?g|avi|ogv|flv|wmv',
-			docs:	'pdf|docx?|xlsx?|pptx?'
+			docs:	'pdf|' +
+					'docx?|dotx?|docm|dotm|' +
+					'xlsx?|xltx?|xlsm|xltm|' +
+					'pptx?|potx?|pptm|potm|ppsx?'
 		};
 
 		$scope.gzipTypes = 'text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml';
@@ -161,6 +172,14 @@
 			return '/etc/nginx/ssl/' + $scope.domain() + '.key';
 		};
 
+		$scope.accessLogDomainPath = function() {
+			return $scope.data.access_log.replace(/([^/]+)\.log$/, $scope.domain() + '.$1.log');
+		};
+
+		$scope.errorLogDomainPath = function() {
+			return $scope.data.error_log.replace(/([^/]+)\.log (.+)$/, $scope.domain() + '.$1.log $2');
+		};
+
 		$scope.refreshHighlighting = function() {
 			var sourceCodes = document.querySelectorAll('main .file .code.source');
 
@@ -183,8 +202,14 @@
 			var hashData = $location.search();
 
 			for (var key in hashData) {
+				// handle false
 				if (hashData[key] === 'false') {
 					hashData[key] = false;
+				}
+
+				// handle true
+				if ((hashData[key] === 'true' || hashData[key] === '') && typeof $scope.data[key] === 'boolean') {
+					hashData[key] = true;
 				}
 
 				if ($scope.data[key] !== undefined && typeof $scope.data[key] === typeof hashData[key]) {
@@ -379,6 +404,18 @@
 			return $scope.isHTTPS() && $scope.data.hsts;
 		};
 
+		$scope.isResolverCloudflare = function() {
+			return $scope.isHTTPS() && $scope.data.resolver_cloudflare;
+		};
+
+		$scope.isResolverGoogle = function() {
+			return $scope.isHTTPS() && $scope.data.resolver_google;
+		};
+
+		$scope.isResolverOpenDNS = function() {
+			return $scope.isHTTPS() && $scope.data.resolver_opendns;
+		};
+
 		$scope.isNonWWW = function() {
 			return $scope.data.non_www;
 		};
@@ -431,6 +468,18 @@
 			return !!$scope.data.access_log;
 		};
 
+		$scope.isErrorLog = function() {
+			return !!$scope.data.error_log;
+		};
+
+		$scope.isAccessLogDomain = function() {
+			return $scope.data.access_log_domain;
+		};
+
+		$scope.isErrorLogDomain = function() {
+			return $scope.data.error_log_domain;
+		};
+
 		$scope.isGzip = function() {
 			return $scope.data.gzip;
 		};
@@ -467,6 +516,14 @@
 				$scope.data.index = 'index.html';
 			} else {
 				$scope.defaultData.index = 'index.php';
+			}
+
+			$scope.data.domain = $scope.data.domain.replace(/^https?:\/\//, '');
+			$scope.data.domain = $scope.data.domain.replace(/\/.*$/, '');
+
+			if ($scope.data.domain.match(/^www\./)) {
+				$scope.data.domain = $scope.data.domain.replace(/^www./, '');
+				$scope.data.non_www = false;
 			}
 
 			for (var key in $scope.data) {
