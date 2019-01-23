@@ -5,15 +5,26 @@
 		display: block;
 		position: relative;
 		background-color: #f8f8f8;
+		border: 1px solid #dee2e6;
 
 		&[data-adsbygoogle-status="done"] {
 			background-color: transparent;
+			border: 0;
 		}
 
 		aside.sidebar & {
 			height: 300px;
 			max-height: 300px;
 		}
+
+		footer & {
+			height: 200px;
+			max-height: 200px;
+		}
+	}
+
+	footer & {
+		margin-bottom: 1rem;
 	}
 
 	.note {

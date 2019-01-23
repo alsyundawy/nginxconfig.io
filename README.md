@@ -1,6 +1,6 @@
 [![nginxconfig.io](public/assets/img/github.png)](https://nginxconfig.io)
 
-Online nginx configuration generator.
+# NGiИX configuration generator
 
 ## Features
 ### Site
@@ -45,13 +45,20 @@ Online nginx configuration generator.
 
 ### PHP
 * PHP
-* PHP connection
+* PHP server
 	* TCP
 	* HHVM socket
 	* 5.x socket
 	* 7.x socket
+* PHP backup server
 * WordPress security essentials
 * Drupal security essentials
+* Magento security essentials
+
+### Python
+* Python
+* Python server
+* Python backup server
 
 ### Routing
 * `index`
